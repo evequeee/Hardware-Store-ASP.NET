@@ -18,5 +18,10 @@ namespace WebApplication.asp.net.c3.Models
         public string? UpdatedBy { get; set; }
         
         public bool IsDeleted { get; set; } = false;
+        
+        // Для оптимістичної конкурентності (PostgreSQL використовує xmin за замовчуванням)
+        // Можна закоментувати, якщо не потрібно
+        [Timestamp]
+        public byte[]? RowVersion { get; set; }
     }
 }

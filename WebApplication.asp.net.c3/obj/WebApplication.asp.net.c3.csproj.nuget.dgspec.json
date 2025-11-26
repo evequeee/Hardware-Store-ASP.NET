@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "G:\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\WebApplication.asp.net.c3.csproj": {}
+    "G:\\Programming\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\WebApplication.asp.net.c3.csproj": {}
   },
   "projects": {
-    "G:\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\WebApplication.asp.net.c3.csproj": {
+    "G:\\Programming\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\WebApplication.asp.net.c3.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\WebApplication.asp.net.c3.csproj",
+        "projectUniqueName": "G:\\Programming\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\WebApplication.asp.net.c3.csproj",
         "projectName": "WebApplication.asp.net.c3",
-        "projectPath": "G:\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\WebApplication.asp.net.c3.csproj",
+        "projectPath": "G:\\Programming\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\WebApplication.asp.net.c3.csproj",
         "packagesPath": "C:\\Users\\Bohdan Q\\.nuget\\packages\\",
-        "outputPath": "G:\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\obj\\",
+        "outputPath": "G:\\Programming\\ASP.NET.C3\\MyProject\\WebApplication.asp.net.c3\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -50,25 +50,29 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "EFCore.NamingConventions": {
+              "target": "Package",
+              "version": "[8.0.3, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.9, )"
+              "version": "[8.0.11, )"
             },
             "Microsoft.EntityFrameworkCore.Tools": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.9, )"
+              "version": "[8.0.11, )"
             },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
-              "version": "[9.0.4, )"
+              "version": "[8.0.11, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[9.0.6, )"
+              "version": "[6.6.2, )"
             }
           },
           "imports": [
