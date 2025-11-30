@@ -15,7 +15,10 @@ namespace WebApplication.asp.net.c3.Models
         public string? LogoUrl { get; set; }
         
         [MaxLength(200)]
-        public string? Website { get; set; }
+        public string? WebsiteUrl { get; set; }
+        
+        [MaxLength(100)]
+        public string? Country { get; set; }
         
         public bool IsActive { get; set; } = true;
         

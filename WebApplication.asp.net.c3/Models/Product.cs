@@ -12,23 +12,20 @@ namespace WebApplication.asp.net.c3.Models
         public string Name { get; set; } = string.Empty;
 
         [MaxLength(50)]
-        public string? SKU { get; set; }
+        public string Sku { get; set; } = string.Empty;
 
         [MaxLength(2000)]
         public string? Description { get; set; }
-
-        [MaxLength(5000)]
-        public string? DetailedDescription { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal? DiscountedPrice { get; set; }
+        public decimal? DiscountPrice { get; set; }
 
         public int StockQuantity { get; set; } = 0;
 
-        public bool IsActive { get; set; } = true;
+        public bool IsAvailable { get; set; } = true;
 
         public bool IsFeatured { get; set; } = false;
 

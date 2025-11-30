@@ -1,0 +1,221 @@
+### Hardware Store API - Test Requests
+@baseUrl = http://localhost:5128/api
+
+#############################
+### CATEGORIES
+#############################
+
+### Get all categories
+GET {{baseUrl}}/categories
+
+### Get active categories only
+GET {{baseUrl}}/categories?activeOnly=true
+
+### Get category by ID
+GET {{baseUrl}}/categories/1
+
+### Get subcategories
+GET {{baseUrl}}/categories/1/subcategories
+
+### Create new category
+POST {{baseUrl}}/categories
+Content-Type: application/json
+
+{
+  "name": "Електрика",
+  "description": "Кабелі, розетки, вимикачі",
+  "isActive": true,
+  "sortOrder": 5
+}
+
+### Update category
+PUT {{baseUrl}}/categories/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Інструменти (оновлено)",
+  "description": "Ручні та електроінструменти - оновлений опис",
+  "isActive": true,
+  "sortOrder": 1
+}
+
+### Delete category
+DELETE {{baseUrl}}/categories/1
+
+#############################
+### BRANDS
+#############################
+
+### Get all brands
+GET {{baseUrl}}/brands
+
+### Get active brands only
+GET {{baseUrl}}/brands?activeOnly=true
+
+### Get brand by ID
+GET {{baseUrl}}/brands/1
+
+### Search brands
+GET {{baseUrl}}/brands/search?query=mak
+
+### Create new brand
+POST {{baseUrl}}/brands
+Content-Type: application/json
+
+{
+  "name": "DeWalt",
+  "description": "Професійний електроінструмент",
+  "logoUrl": "https://example.com/dewalt-logo.png",
+  "websiteUrl": "https://www.dewalt.com",
+  "country": "USA",
+  "isActive": true
+}
+
+### Update brand
+PUT {{baseUrl}}/brands/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Makita (оновлено)",
+  "description": "Японський виробник електроінструментів",
+  "logoUrl": "https://example.com/makita-logo.png",
+  "websiteUrl": "https://www.makita.com",
+  "country": "Japan",
+  "isActive": true
+}
+
+### Delete brand
+DELETE {{baseUrl}}/brands/1
+
+#############################
+### PRODUCTS
+#############################
+
+### Get all products
+GET {{baseUrl}}/products
+
+### Get product by ID (without details)
+GET {{baseUrl}}/products/1
+
+### Get product with details (Category + Brand)
+GET {{baseUrl}}/products/1?includeDetails=true
+
+### Get products by category
+GET {{baseUrl}}/products/category/1
+
+### Get products by brand
+GET {{baseUrl}}/products/brand/1
+
+### Search products
+GET {{baseUrl}}/products/search?query=дриль
+
+### Get products in stock
+GET {{baseUrl}}/products/in-stock
+
+### Create new product
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Шуруповерт акумуляторний Bosch GSR 12V",
+  "description": "Компактний шуруповерт для домашніх робіт",
+  "sku": "SCREW-BOS-001",
+  "categoryId": 1,
+  "brandId": 2,
+  "price": 2500.00,
+  "discountPrice": 2199.00,
+  "stockQuantity": 25,
+  "isAvailable": true,
+  "isFeatured": false
+}
+
+### Update product
+PUT {{baseUrl}}/products/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Дриль ударний Makita HP1640 (оновлено)",
+  "description": "Потужний ударний дриль для професійного використання",
+  "sku": "DRILL-MAK-001",
+  "categoryId": 1,
+  "brandId": 1,
+  "price": 3800.00,
+  "discountPrice": 3299.00,
+  "stockQuantity": 10,
+  "isAvailable": true,
+  "isFeatured": true
+}
+
+### Update product stock (add 10 items)
+PATCH {{baseUrl}}/products/1/stock
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 10
+}
+
+### Update product stock (remove 3 items)
+PATCH {{baseUrl}}/products/1/stock
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": -3
+}
+
+### Delete product
+DELETE {{baseUrl}}/products/1
+
+#############################
+### ERROR SCENARIOS
+#############################
+
+### 404 - Not Found (nonexistent category)
+GET {{baseUrl}}/categories/999
+
+### 404 - Not Found (nonexistent brand)
+GET {{baseUrl}}/brands/999
+
+### 404 - Not Found (nonexistent product)
+GET {{baseUrl}}/products/999
+
+### 409 - Conflict (duplicate category name)
+POST {{baseUrl}}/categories
+Content-Type: application/json
+
+{
+  "name": "Інструменти",
+  "description": "Дублікат назви",
+  "isActive": true
+}
+
+### 409 - Conflict (cannot delete category with products)
+DELETE {{baseUrl}}/categories/1
+
+### 400 - Bad Request (ID mismatch)
+PUT {{baseUrl}}/categories/5
+Content-Type: application/json
+
+{
+  "id": 10,
+  "name": "Test",
+  "isActive": true
+}
+
+### 400 - Bad Request (invalid discount price)
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Test Product",
+  "sku": "TEST-001",
+  "categoryId": 1,
+  "brandId": 1,
+  "price": 1000.00,
+  "discountPrice": 1500.00,
+  "stockQuantity": 10
+}

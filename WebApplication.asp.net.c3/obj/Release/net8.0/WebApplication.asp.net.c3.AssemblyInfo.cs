@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WebApplication.asp.net.c3")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d44d8ea71aef8b9b5ba22d8a7e0738833645f525")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bcac96792fa8595e5d6c2eb5ce3fa74a0cf7a9d2")]
 [assembly: System.Reflection.AssemblyProductAttribute("WebApplication.asp.net.c3")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WebApplication.asp.net.c3")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
