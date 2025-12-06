@@ -1,0 +1,328 @@
+### Lab 3 - Entity Framework Core API Tests
+### Hardware Store API - Computer Components Catalog
+
+@baseUrl = http://localhost:5128/api
+@contentType = application/json
+
+### ==================================================
+### PAGINATION & FILTERING TESTS
+### ==================================================
+
+### 1. Get filtered products with pagination (Page 1, 10 items)
+GET {{baseUrl}}/products/filter?Page=1&PageSize=10
+Accept: {{contentType}}
+
+###
+
+### 2. Get filtered products sorted by price ascending
+GET {{baseUrl}}/products/filter?Page=1&PageSize=5&SortBy=price&SortOrder=asc
+Accept: {{contentType}}
+
+###
+
+### 3. Get filtered products sorted by rating descending
+GET {{baseUrl}}/products/filter?Page=1&PageSize=5&SortBy=rating&SortOrder=desc
+Accept: {{contentType}}
+
+###
+
+### 4. Filter by category (Процесори = 1)
+GET {{baseUrl}}/products/filter?CategoryId=1&Page=1&PageSize=10
+Accept: {{contentType}}
+
+###
+
+### 5. Filter by brand (Intel = 1)
+GET {{baseUrl}}/products/filter?BrandId=1&Page=1&PageSize=10
+Accept: {{contentType}}
+
+###
+
+### 6. Search by term
+GET {{baseUrl}}/products/filter?SearchTerm=процесор&Page=1&PageSize=10
+Accept: {{contentType}}
+
+###
+
+### 7. Filter by price range (50000-150000)
+GET {{baseUrl}}/products/filter?MinPrice=50000&MaxPrice=150000&Page=1&PageSize=10
+Accept: {{contentType}}
+
+###
+
+### 8. Filter only in stock products
+GET {{baseUrl}}/products/filter?InStock=true&Page=1&PageSize=10
+Accept: {{contentType}}
+
+###
+
+### 9. Filter only featured products
+GET {{baseUrl}}/products/filter?IsFeatured=true&Page=1&PageSize=10
+Accept: {{contentType}}
+
+###
+
+### 10. Filter by minimum rating
+GET {{baseUrl}}/products/filter?MinRating=4.5&Page=1&PageSize=10
+Accept: {{contentType}}
+
+###
+
+### 11. Complex filter: Category + Price range + In stock + Sort by price
+GET {{baseUrl}}/products/filter?CategoryId=1&MinPrice=10000&MaxPrice=50000&InStock=true&SortBy=price&SortOrder=asc&Page=1&PageSize=5
+Accept: {{contentType}}
+
+###
+
+### ==================================================
+### CATEGORIES CRUD
+### ==================================================
+
+### 12. Get all categories
+GET {{baseUrl}}/categories
+Accept: {{contentType}}
+
+###
+
+### 13. Get category by ID (Процесори = 1)
+GET {{baseUrl}}/categories/1
+Accept: {{contentType}}
+
+###
+
+### 14. Create new category
+POST {{baseUrl}}/categories
+Content-Type: {{contentType}}
+
+{
+  "name": "Охолодження",
+  "description": "Системи охолодження для комп'ютерів",
+  "imageUrl": "https://example.com/cooling.jpg",
+  "isActive": true,
+  "sortOrder": 6
+}
+
+###
+
+### 15. Update category
+PUT {{baseUrl}}/categories/1
+Content-Type: {{contentType}}
+
+{
+  "id": 1,
+  "name": "Процесори (CPU)",
+  "description": "Центральні процесори для комп'ютерів - Intel та AMD",
+  "imageUrl": "https://example.com/cpu-updated.jpg",
+  "isActive": true,
+  "sortOrder": 1
+}
+
+###
+
+### ==================================================
+### BRANDS CRUD
+### ==================================================
+
+### 16. Get all brands
+GET {{baseUrl}}/brands
+Accept: {{contentType}}
+
+###
+
+### 17. Get active brands only
+GET {{baseUrl}}/brands/active
+Accept: {{contentType}}
+
+###
+
+### 18. Create new brand
+POST {{baseUrl}}/brands
+Content-Type: {{contentType}}
+
+{
+  "name": "MSI",
+  "description": "Micro-Star International - виробник комп'ютерних компонентів",
+  "logoUrl": "https://example.com/msi-logo.png",
+  "websiteUrl": "https://www.msi.com",
+  "country": "Тайвань",
+  "isActive": true
+}
+
+###
+
+### 19. Update brand
+PUT {{baseUrl}}/brands/1
+Content-Type: {{contentType}}
+
+{
+  "id": 1,
+  "name": "Intel Corporation",
+  "description": "Провідний виробник процесорів та чіпсетів",
+  "logoUrl": "https://example.com/intel-logo-updated.png",
+  "websiteUrl": "https://www.intel.com",
+  "country": "США",
+  "isActive": true
+}
+
+###
+
+### ==================================================
+### PRODUCTS CRUD
+### ==================================================
+
+### 20. Get all products (no pagination)
+GET {{baseUrl}}/products
+Accept: {{contentType}}
+
+###
+
+### 21. Get product by ID with details
+GET {{baseUrl}}/products/1?includeDetails=true
+Accept: {{contentType}}
+
+###
+
+### 22. Get products by category
+GET {{baseUrl}}/products/category/2
+Accept: {{contentType}}
+
+###
+
+### 23. Get products by brand
+GET {{baseUrl}}/products/brand/3
+Accept: {{contentType}}
+
+###
+
+### 24. Search products
+GET {{baseUrl}}/products/search?term=NVIDIA
+Accept: {{contentType}}
+
+###
+
+### 25. Get featured products
+GET {{baseUrl}}/products/featured
+Accept: {{contentType}}
+
+###
+
+### 26. Get in-stock products
+GET {{baseUrl}}/products/in-stock
+Accept: {{contentType}}
+
+###
+
+### 27. Create new product
+POST {{baseUrl}}/products
+Content-Type: {{contentType}}
+
+{
+  "name": "AMD Ryzen 5 7600X",
+  "sku": "AMD-R5-7600X",
+  "description": "6-ядерний процесор AMD Ryzen 5 7600X на архітектурі Zen 4, частота 4.7-5.3 GHz",
+  "categoryId": 1,
+  "brandId": 2,
+  "price": 12999.00,
+  "discountPrice": 11999.00,
+  "stockQuantity": 25,
+  "isAvailable": true,
+  "isFeatured": false
+}
+
+###
+
+### 28. Update product
+PUT {{baseUrl}}/products/1
+Content-Type: {{contentType}}
+
+{
+  "id": 1,
+  "name": "Intel Core i9-14900K (Updated)",
+  "sku": "INTEL-I9-14900K",
+  "description": "24-ядерний процесор Intel Core i9 14-го покоління з оновленою архітектурою",
+  "categoryId": 1,
+  "brandId": 1,
+  "price": 24999.00,
+  "discountPrice": 22999.00,
+  "stockQuantity": 12,
+  "isAvailable": true,
+  "isFeatured": true
+}
+
+###
+
+### 29. Update product stock
+PATCH {{baseUrl}}/products/1/stock
+Content-Type: {{contentType}}
+
+{
+  "productId": 1,
+  "quantity": 20
+}
+
+###
+
+### 30. Delete product (testing - should fail if product doesn't exist)
+DELETE {{baseUrl}}/products/999
+Accept: {{contentType}}
+
+###
+
+### ==================================================
+### VALIDATION TESTS (should return 400 Bad Request)
+### ==================================================
+
+### 31. Create category with invalid name (empty)
+POST {{baseUrl}}/categories
+Content-Type: {{contentType}}
+
+{
+  "name": "",
+  "description": "Test",
+  "isActive": true
+}
+
+###
+
+### 32. Create brand with invalid URL
+POST {{baseUrl}}/brands
+Content-Type: {{contentType}}
+
+{
+  "name": "Test Brand",
+  "websiteUrl": "invalid-url",
+  "isActive": true
+}
+
+###
+
+### 33. Create product with invalid SKU format
+POST {{baseUrl}}/products
+Content-Type: {{contentType}}
+
+{
+  "name": "Test Product",
+  "sku": "invalid sku format",
+  "categoryId": 1,
+  "brandId": 1,
+  "price": 1000,
+  "stockQuantity": 10
+}
+
+###
+
+### 34. Create product with discount price higher than regular price
+POST {{baseUrl}}/products
+Content-Type: {{contentType}}
+
+{
+  "name": "Test Product",
+  "sku": "TEST-001",
+  "categoryId": 1,
+  "brandId": 1,
+  "price": 1000,
+  "discountPrice": 1500,
+  "stockQuantity": 10
+}
+
+###

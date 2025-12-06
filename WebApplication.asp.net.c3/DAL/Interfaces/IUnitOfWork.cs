@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace WebApplication.asp.net.c3.DAL.Interfaces;
 
 /// <summary>
@@ -13,11 +11,8 @@ public interface IUnitOfWork : IDisposable
     IProductRepository Products { get; }
 
     // Transaction management
-    void BeginTransaction();
-    Task CommitAsync(CancellationToken cancellationToken = default);
-    void Rollback();
-
-    // Connection management
-    IDbConnection Connection { get; }
-    IDbTransaction? Transaction { get; }
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task BeginTransactionAsync(CancellationToken cancellationToken = default);
+    Task CommitTransactionAsync(CancellationToken cancellationToken = default);
+    Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
 }

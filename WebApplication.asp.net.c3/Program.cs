@@ -1,3 +1,5 @@
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using WebApplication.asp.net.c3.API.Middleware;
 using WebApplication.asp.net.c3.BLL.Interfaces;
@@ -5,6 +7,7 @@ using WebApplication.asp.net.c3.BLL.Mapping;
 using WebApplication.asp.net.c3.BLL.Services;
 using WebApplication.asp.net.c3.DAL.Interfaces;
 using WebApplication.asp.net.c3.DAL.Repositories;
+using WebApplication.asp.net.c3.Data;
 
 namespace WebApplication.asp.net.c3;
 
@@ -51,16 +54,28 @@ public class Program
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        // Database Context - Entity Framework Core with PostgreSQL
+        services.AddDbContext<HardwareStoreDbContext>(options =>
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
         // Controllers
         services.AddControllers();
 
         // AutoMapper
         services.AddAutoMapper(typeof(MappingProfile));
 
-        // Dependency Injection - DAL
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        // FluentValidation
+        services.AddValidatorsFromAssemblyContaining<Program>();
 
-        // Dependency Injection - BLL
+        // Dependency Injection - DAL (Unit of Work pattern)
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        // Dependency Injection - DAL (Repositories)
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IBrandRepository, BrandRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+
+        // Dependency Injection - BLL (Business Logic Services)
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<IProductService, ProductService>();
@@ -73,7 +88,7 @@ public class Program
             {
                 Title = "Hardware Store API - Product Catalog",
                 Version = "v1",
-                Description = "Three-tier architecture API using ADO.NET & Dapper with Unit of Work pattern",
+                Description = "Three-tier architecture API using Entity Framework Core with Code-First approach and Fluent API",
                 Contact = new Microsoft.OpenApi.Models.OpenApiContact
                 {
                     Name = "Hardware Store Team"

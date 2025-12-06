@@ -7,9 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Database Access -->
-    <PackageReference Include="Npgsql" Version="8.0.5" />
-    <PackageReference Include="Dapper" Version="2.1.35" />
+    <!-- Entity Framework Core -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
     
     <!-- Logging -->
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
@@ -20,11 +28,16 @@
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     
+    <!-- Validation -->
+    <PackageReference Include="FluentValidation" Version="11.9.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    
     <!-- API Documentation -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     
-    <!-- HTTP Problem Details -->
-    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
+    <!-- Specification Pattern -->
+    <PackageReference Include="Ardalis.Specification" Version="7.0.0" />
+    <PackageReference Include="Ardalis.Specification.EntityFrameworkCore" Version="7.0.0" />
   </ItemGroup>
 
 </Project>

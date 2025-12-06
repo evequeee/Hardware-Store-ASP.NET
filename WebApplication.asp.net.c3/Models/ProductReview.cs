@@ -29,7 +29,7 @@ namespace WebApplication.asp.net.c3.Models
         public string? ApprovedBy { get; set; }
         
         [Required]
-        public long ProductId { get; set; }
+        public int ProductId { get; set; }
         
         public Product Product { get; set; } = null!;
     }

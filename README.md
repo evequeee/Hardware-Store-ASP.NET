@@ -1,118 +1,83 @@
-# Hardware Store API - Product Catalog
+# Hardware Store API - каталог комп'ютерних комплектуючих
 
-**Тришарова архітектура** з використанням **ADO.NET** та **Dapper** (без Entity Framework Core)
+API для магазину комп'ютерних комплектуючих. Зроблено на ASP.NET Core 8.0 з ADO.NET та Dapper (Entity Framework не використовується).
 
-## 📋 Опис проєкту
+## Що тут є
 
-Це ASP.NET Core 8.0 Web API для управління каталогом продуктів магазину будівельних матеріалів. Проєкт реалізований згідно з вимогами **Практичного заняття №2** з використанням:
+Проєкт для **Лабораторної роботи №2**. Основні штуки:
 
-- **Vertical Slice Architecture** (вертикальна архітектура по функціональності)
-- **DAL (Data Access Layer)** → репозиторії на базі ADO.NET та Dapper
-- **BLL (Business Logic Layer)** → сервіси з бізнес-логікою, DTO, AutoMapper
-- **API Layer** → thin controllers з атрибутною маршрутизацією
-- **Unit of Work** pattern для управління транзакціями
-- **Serilog** для логування
-- **ProblemDetails** для уніфікованої обробки помилок
+- Тришарова архітектура (DAL → BLL → API)
+- Repository pattern з ADO.NET та Dapper
+- Unit of Work для транзакцій
+- AutoMapper для маппінгу між моделями та DTO
+- Serilog для логів
+- Middleware для обробки помилок
 
 ---
 
-## 🏗 Архітектура проєкту
+## Структура проєкту
 
 ```
 WebApplication.asp.net.c3/
 │
-├── API/                          # Контролери (thin controllers)
+├── API/                          # Контролери
 │   ├── CategoriesController.cs
 │   ├── BrandsController.cs
 │   ├── ProductsController.cs
-│   └── Middleware/
-│       └── GlobalExceptionHandlerMiddleware.cs
+│   └── Middleware/               # для обробки помилок
 │
-├── BLL/                          # Business Logic Layer
-│   ├── Interfaces/
-│   │   ├── ICategoryService.cs
-│   │   ├── IBrandService.cs
-│   │   └── IProductService.cs
-│   ├── Services/
-│   │   ├── CategoryService.cs   # Бізнес-логіка категорій
-│   │   ├── BrandService.cs      # Бізнес-логіка брендів
-│   │   └── ProductService.cs    # Бізнес-логіка продуктів
-│   ├── DTOs/                     # Data Transfer Objects
-│   ├── Mapping/                  # AutoMapper профілі
-│   ├── Exceptions/               # Доменні винятки
-│   └── Validators/               # Бізнес-валідація
+├── BLL/                          # Бізнес-логіка
+│   ├── Services/                 # тут вся логіка
+│   ├── DTOs/                     # об'єкти для передачі даних
+│   ├── Mapping/                  # AutoMapper profiles
+│   └── Exceptions/               # свої винятки
 │
-├── DAL/                          # Data Access Layer
-│   ├── Interfaces/
-│   │   ├── IRepository.cs       # Базовий репозиторій
-│   │   ├── IUnitOfWork.cs       # Unit of Work
-│   │   ├── ICategoryRepository.cs
-│   │   ├── IBrandRepository.cs
-│   │   └── IProductRepository.cs
-│   └── Repositories/
-│       ├── UnitOfWork.cs        # Управління транзакціями
-│       ├── CategoryRepository.cs # Чистий ADO.NET
-│       ├── BrandRepository.cs    # ADO.NET + Dapper
-│       └── ProductRepository.cs  # Dapper з multi-mapping
+├── DAL/                          # Робота з БД
+│   ├── Repositories/             # CategoryRepo (ADO.NET)
+│   │                             # BrandRepo (ADO.NET + Dapper)
+│   │                             # ProductRepo (Dapper)
+│   └── Interfaces/               # інтерфейси репозиторіїв
 │
-├── Models/                       # Доменні моделі
-│   ├── BaseEntity.cs
-│   ├── Category.cs
-│   ├── Brand.cs
-│   └── Product.cs
-│
-└── Program.cs                    # Конфігурація DI, middleware
+└── Models/                       # класи моделей
 ```
 
 ---
 
-## 🎯 Ключові особливості реалізації
+## Як це працює
 
-### 1. **DAL - Data Access Layer**
+### DAL - робота з базою
 
-#### ✅ CategoryRepository - **Чистий ADO.NET**
-- Ручне управління підключеннями (`IDbConnection`)
-- Параметризовані запити
-- Підтримка транзакцій
-- Async/await через `NpgsqlCommand`
-
+**CategoryRepository** - написано на чистому ADO.NET
 ```csharp
-public async Task<Category?> GetByIdAsync(int id, CancellationToken cancellationToken)
+// приклад методу з ADO.NET
+public async Task<Category?> GetByIdAsync(int id)
 {
-    const string sql = @"SELECT id, name, description... WHERE id = @Id";
-    
+    const string sql = "SELECT * FROM categories WHERE id = @Id";
     using var command = CreateCommand(sql);
     AddParameter(command, "@Id", id);
-    using var reader = await ExecuteReaderAsync(command, cancellationToken);
     
-    if (await reader.ReadAsync(cancellationToken))
+    using var reader = await ExecuteReaderAsync(command);
+    if (await reader.ReadAsync())
         return MapToCategory(reader);
     
     return null;
 }
 ```
 
-#### ✅ BrandRepository - **ADO.NET + Dapper**
-- Використання Dapper для маппінгу результатів
-- Async методи (`QueryAsync`, `ExecuteAsync`)
-- Параметризовані запити через анонімні об'єкти
-
+**BrandRepository** - ADO.NET + Dapper (трошки простіше)
 ```csharp
-public async Task<Brand?> GetByIdAsync(int id, CancellationToken cancellationToken)
+public async Task<Brand?> GetByIdAsync(int id)
 {
-    const string sql = @"SELECT id AS Id, name AS Name... FROM brands WHERE id = @Id";
-    
+    const string sql = "SELECT * FROM brands WHERE id = @Id";
     return await _connection.QueryFirstOrDefaultAsync<Brand>(
-        new CommandDefinition(sql, new { Id = id }, _transaction, cancellationToken: cancellationToken));
+        new CommandDefinition(sql, new { Id = id }, _transaction));
 }
 ```
 
-#### ✅ ProductRepository - **Dapper з Multi-Mapping**
-- Складні запити з JOIN
-- Multi-mapping для завантаження зв'язаних сутностей
-
+**ProductRepository** - повний Dapper з JOIN-ами
 ```csharp
-public async Task<Product?> GetWithDetailsAsync(int id, CancellationToken cancellationToken)
+// тут складніше - завантажуємо продукт разом з категорією і брендом
+public async Task<Product?> GetWithDetailsAsync(int id)
 {
     const string sql = @"
         SELECT p.*, c.*, b.*
@@ -122,29 +87,30 @@ public async Task<Product?> GetWithDetailsAsync(int id, CancellationToken cancel
         WHERE p.id = @Id";
     
     var products = await _connection.QueryAsync<Product, Category, Brand, Product>(
-        new CommandDefinition(sql, new { Id = id }, _transaction, cancellationToken: cancellationToken),
+        sql, 
         (product, category, brand) =>
         {
             product.Category = category;
             product.Brand = brand;
             return product;
         },
+        new { Id = id },
         splitOn: "Id,Id");
     
     return products.FirstOrDefault();
 }
 ```
 
-#### ✅ Unit of Work - **Управління транзакціями**
+**Unit of Work** - щоб все в одній транзакції
 ```csharp
 try
 {
     _unitOfWork.BeginTransaction();
     
-    var categoryId = await _unitOfWork.Categories.AddAsync(category, cancellationToken);
-    await _unitOfWork.Products.AddAsync(product, cancellationToken);
+    var id = await _unitOfWork.Categories.AddAsync(category);
+    await _unitOfWork.Products.AddAsync(product);
     
-    await _unitOfWork.CommitAsync(cancellationToken);
+    await _unitOfWork.CommitAsync();
 }
 catch
 {
@@ -153,52 +119,39 @@ catch
 }
 ```
 
-### 2. **BLL - Business Logic Layer**
+### BLL - бізнес-логіка
 
-#### Сервіси з бізнес-логікою:
-- Валідація на рівні бізнес-правил
-- Кидання доменних винятків (`NotFoundException`, `BusinessConflictException`)
-- Використання UoW для транзакцій
-
+Тут перевіряємо правила бізнесу, працюємо з DTO
 ```csharp
-public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto, CancellationToken ct)
+public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto)
 {
-    // Бізнес-валідація
-    var existing = await _unitOfWork.Categories.GetByNameAsync(dto.Name, ct);
+    // перевіряємо чи не існує вже така категорія
+    var existing = await _unitOfWork.Categories.GetByNameAsync(dto.Name);
     if (existing != null)
-        throw new BusinessConflictException($"Category '{dto.Name}' already exists.");
+        throw new BusinessConflictException($"Категорія '{dto.Name}' вже є");
     
-    // Маппінг DTO → Entity
     var category = _mapper.Map<Category>(dto);
     
-    // Транзакція
     _unitOfWork.BeginTransaction();
-    var id = await _unitOfWork.Categories.AddAsync(category, ct);
-    await _unitOfWork.CommitAsync(ct);
+    var id = await _unitOfWork.Categories.AddAsync(category);
+    await _unitOfWork.CommitAsync();
     
     category.Id = id;
     return _mapper.Map<CategoryDto>(category);
 }
 ```
 
-### 3. **API Layer - Thin Controllers**
+### API - контролери
 
-Контролери **лише делегують** виклики до сервісів:
-
+Просто викликають сервіси, нічого складного
 ```csharp
 [HttpPost]
-[ProducesResponseType(typeof(CategoryDto), StatusCodes.Status201Created)]
-[ProducesResponseType(StatusCodes.Status409Conflict)]
-public async Task<ActionResult<CategoryDto>> Create(
-    [FromBody] CreateCategoryDto dto, 
-    CancellationToken cancellationToken)
+public async Task<ActionResult<CategoryDto>> Create([FromBody] CreateCategoryDto dto)
 {
-    var category = await _categoryService.CreateCategoryAsync(dto, cancellationToken);
+    var category = await _categoryService.CreateCategoryAsync(dto);
     return CreatedAtAction(nameof(GetById), new { id = category.Id }, category);
 }
 ```
-
-### 4. **Обробка помилок - ProblemDetails (RFC 7807)**
 
 Глобальний middleware перехоплює всі винятки і повертає стандартизовані відповіді:
 
@@ -248,199 +201,122 @@ cd WebApplication.asp.net.c3
 dotnet run
 ```
 
-4. **Відкрийте Swagger UI:**
-```
-http://localhost:5128
-```
+4. Відкрий Swagger - `http://localhost:5128`
 
 ---
 
-## 📡 Приклади використання API
+## Як тестувати API
 
-### 1. Отримати всі категорії (активні)
+### Приклади через cURL
+
+**Всі категорії:**
 ```bash
-GET http://localhost:5128/api/categories?activeOnly=true
-
-# cURL
 curl -X GET "http://localhost:5128/api/categories?activeOnly=true"
 ```
 
-**Відповідь:**
+**Створити категорію:**
+```bash
+curl -X POST "http://localhost:5128/api/categories" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Сантехніка","description":"Труби та інше","isActive":true}'
+```
+
+**Продукт із деталями:**
+```bash
+curl -X GET "http://localhost:5128/api/products/5?includeDetails=true"
+```
+
+**Оновити залишок:**
+```bash
+curl -X PATCH "http://localhost:5128/api/products/5/stock" \
+  -H "Content-Type: application/json" \
+  -d '{"quantity": -2}'
+```
+
+### Відповіді з API
+
+**Список категорій:**
 ```json
 [
   {
     "id": 1,
     "name": "Інструменти",
     "description": "Ручні та електроінструменти",
-    "isActive": true,
-    "sortOrder": 1
+    "isActive": true
   }
 ]
 ```
 
-### 2. Створити нову категорію
-```bash
-POST http://localhost:5128/api/categories
-Content-Type: application/json
-
-{
-  "name": "Сантехніка",
-  "description": "Труби, змішувачі, ванни",
-  "isActive": true,
-  "sortOrder": 10
-}
-
-# cURL
-curl -X POST "http://localhost:5128/api/categories" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Сантехніка","description":"Труби, змішувачі","isActive":true,"sortOrder":10}'
-```
-
-**Відповідь (201 Created):**
-```json
-{
-  "id": 15,
-  "name": "Сантехніка",
-  "description": "Труби, змішувачі, ванни",
-  "isActive": true,
-  "sortOrder": 10
-}
-```
-
-### 3. Отримати продукт із деталями (Category + Brand)
-```bash
-GET http://localhost:5128/api/products/5?includeDetails=true
-
-# cURL
-curl -X GET "http://localhost:5128/api/products/5?includeDetails=true"
-```
-
-**Відповідь:**
+**Продукт:**
 ```json
 {
   "id": 5,
-  "name": "Дриль акумуляторний Makita",
-  "sku": "DRILL-MAK-001",
+  "name": "Дриль Makita",
   "price": 3500.00,
-  "discountPrice": 2999.00,
   "stockQuantity": 15,
-  "isAvailable": true,
-  "isFeatured": true,
-  "category": {
-    "id": 1,
-    "name": "Інструменти"
-  },
-  "brand": {
-    "id": 3,
-    "name": "Makita",
-    "country": "Japan"
-  }
+  "category": { "id": 1, "name": "Інструменти" },
+  "brand": { "id": 3, "name": "Makita", "country": "Japan" }
 }
 ```
 
-### 4. Оновити запас продукту
-```bash
-PATCH http://localhost:5128/api/products/5/stock
-Content-Type: application/json
+### Помилки
 
-{
-  "productId": 5,
-  "quantity": -2
-}
-
-# cURL
-curl -X PATCH "http://localhost:5128/api/products/5/stock" \
-  -H "Content-Type: application/json" \
-  -d '{"productId":5,"quantity":-2}'
-```
-
-### 5. Пошук брендів
-```bash
-GET http://localhost:5128/api/brands/search?query=mak
-
-# cURL
-curl -X GET "http://localhost:5128/api/brands/search?query=mak"
-```
-
----
-
-## 🧪 Тестування
-
-### Використання Swagger UI:
-1. Відкрийте `http://localhost:5128`
-2. Розгорніть endpoint (наприклад, `POST /api/categories`)
-3. Натисніть **"Try it out"**
-4. Заповніть JSON-тіло
-5. Натисніть **"Execute"**
-
-### Приклади помилок:
-
-**404 Not Found:**
+**404 якщо не знайдено:**
 ```json
 {
   "title": "Resource Not Found",
   "status": 404,
-  "detail": "Brand with id '999' was not found.",
-  "instance": "/api/brands/999"
+  "detail": "Brand with id '999' was not found."
 }
 ```
 
-**409 Conflict (бізнес-правило):**
+**409 якщо порушення правил:**
 ```json
 {
   "title": "Business Rule Violation",
   "status": 409,
-  "detail": "Cannot delete category that has products. Remove or reassign products first.",
+  "detail": "Cannot delete category that has products."
+}
   "instance": "/api/categories/5"
 }
 ```
 
 ---
 
-## 📊 Критерії приймання (виконано)
+## Що було зроблено
 
-✅ **DAL:**
-- 1 репозиторій на чистому ADO.NET (`CategoryRepository`)
-- 2 репозиторії на ADO.NET + Dapper (`BrandRepository`, `ProductRepository`)
+**DAL (робота з БД):**
+- CategoryRepository - чистий ADO.NET
+- BrandRepository - ADO.NET + Dapper
+- ProductRepository - Dapper з JOIN-ами
+- Unit of Work для транзакцій
 - Всі запити параметризовані
-- UoW з транзакційним сценарієм
-- SQL-помилки логуються, не передаються в API
 
-✅ **BLL:**
-- DTO і AutoMapper профілі
-- Сервіси з чіткою поверхневою бізнес-логікою
-- UoW для транзакцій
-- Доменні винятки
+**BLL (бізнес-логіка):**
+- Сервіси з перевіркою правил
+- DTO та AutoMapper
+- Свої винятки для помилок
 
-✅ **API:**
-- Thin controllers
-- Атрибутна маршрутизація
-- Асинхронність з CancellationToken
-- Коректні HTTP-статуси (201, 204, 404, 409)
-- ProblemDetails для помилок
-- OpenAPI/Swagger опис
+**API:**
+- Контролери просто викликають сервіси
+- Асинхронність
+- Правильні HTTP коди (201, 404, 409, тощо)
+- Swagger для тестування
 
 ---
 
-## 📚 Технології
+## Технології
 
-- **ASP.NET Core 8.0** - Web API framework
-- **PostgreSQL** - база даних
-- **Npgsql** - PostgreSQL драйвер для ADO.NET
-- **Dapper** - мікро-ORM для маппінгу
-- **AutoMapper 12** - маппінг DTO ↔ Entity
-- **Serilog** - структуроване логування
-- **Swashbuckle (Swagger)** - документація API
-
----
-
-## 👤 Автор
-
-**GitHub:** [evequeee](https://github.com/evequeee)  
-**Репозиторій:** [Hardware-Store-ASP.NET](https://github.com/evequeee/Hardware-Store-ASP.NET)
+- ASP.NET Core 8.0
+- PostgreSQL + Npgsql
+- Dapper
+- AutoMapper
+- Serilog
+- Swagger
 
 ---
 
-## 📝 Ліцензія
+## Автор
 
-Проєкт створено для навчальних цілей (Практичне заняття №2).
+GitHub: [evequeee](https://github.com/evequeee)
+

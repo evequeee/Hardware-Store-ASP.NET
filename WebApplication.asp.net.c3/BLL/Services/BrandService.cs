@@ -68,18 +68,18 @@ public class BrandService : IBrandService
 
         try
         {
-            _unitOfWork.BeginTransaction();
-            var id = await _unitOfWork.Brands.AddAsync(brand, cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
+            var createdBrand = await _unitOfWork.Brands.AddAsync(brand, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-            brand.Id = id;
-            _logger.LogInformation("Brand created successfully with Id: {BrandId}", id);
+            _logger.LogInformation("Brand created successfully with Id: {BrandId}", createdBrand.Id);
 
-            return _mapper.Map<BrandDto>(brand);
+            return _mapper.Map<BrandDto>(createdBrand);
         }
         catch (Exception ex)
         {
-            _unitOfWork.Rollback();
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             _logger.LogError(ex, "Error creating brand: {BrandName}", dto.Name);
             throw;
         }
@@ -105,9 +105,10 @@ public class BrandService : IBrandService
 
         try
         {
-            _unitOfWork.BeginTransaction();
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
             await _unitOfWork.Brands.UpdateAsync(brand, cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
             _logger.LogInformation("Brand updated successfully with Id: {BrandId}", dto.Id);
 
@@ -115,7 +116,7 @@ public class BrandService : IBrandService
         }
         catch (Exception ex)
         {
-            _unitOfWork.Rollback();
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             _logger.LogError(ex, "Error updating brand: {BrandId}", dto.Id);
             throw;
         }
@@ -139,17 +140,22 @@ public class BrandService : IBrandService
 
         try
         {
-            _unitOfWork.BeginTransaction();
-            var result = await _unitOfWork.Brands.DeleteAsync(id, cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
+            var brand = await _unitOfWork.Brands.GetByIdAsync(id, cancellationToken);
+            if (brand != null)
+            {
+                await _unitOfWork.Brands.DeleteAsync(brand, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
             _logger.LogInformation("Brand deleted successfully with Id: {BrandId}", id);
 
-            return result;
+            return true;
         }
         catch (Exception ex)
         {
-            _unitOfWork.Rollback();
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             _logger.LogError(ex, "Error deleting brand: {BrandId}", id);
             throw;
         }

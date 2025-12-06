@@ -16,7 +16,7 @@ namespace WebApplication.asp.net.c3.Models
         public int SortOrder { get; set; } = 0;
         
         [Required]
-        public long ProductId { get; set; }
+        public int ProductId { get; set; }
         
         public Product Product { get; set; } = null!;
     }

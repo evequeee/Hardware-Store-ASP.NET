@@ -1,122 +1,133 @@
-using System.Data;
-using Microsoft.Extensions.Configuration;
-using Npgsql;
+using Microsoft.EntityFrameworkCore.Storage;
 using WebApplication.asp.net.c3.DAL.Interfaces;
+using WebApplication.asp.net.c3.Data;
 
 namespace WebApplication.asp.net.c3.DAL.Repositories;
 
+/// <summary>
+/// Unit of Work implementation for managing transactions across repositories
+/// </summary>
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly string _connectionString;
-    private IDbConnection? _connection;
-    private IDbTransaction? _transaction;
-    private bool _disposed;
-
+    private readonly HardwareStoreDbContext _context;
+    private IDbContextTransaction? _transaction;
+    
     private ICategoryRepository? _categories;
     private IBrandRepository? _brands;
     private IProductRepository? _products;
 
-    public UnitOfWork(IConfiguration configuration)
+    public UnitOfWork(HardwareStoreDbContext context)
     {
-        _connectionString = configuration.GetConnectionString("ProductCatalogDb") 
-            ?? throw new InvalidOperationException("Connection string 'ProductCatalogDb' not found.");
+        _context = context ?? throw new ArgumentNullException(nameof(context));
     }
 
-    public IDbConnection Connection
-    {
-        get
-        {
-            if (_connection == null)
-            {
-                _connection = new NpgsqlConnection(_connectionString);
-                _connection.Open();
-            }
-            else if (_connection.State != ConnectionState.Open)
-            {
-                _connection.Open();
-            }
-            return _connection;
-        }
-    }
-
-    public IDbTransaction? Transaction => _transaction;
-
+    /// <summary>
+    /// Category repository - lazy initialization
+    /// </summary>
     public ICategoryRepository Categories
     {
         get
         {
-            _categories ??= new CategoryRepository(Connection, Transaction);
+            _categories ??= new CategoryRepository(_context);
             return _categories;
         }
     }
 
+    /// <summary>
+    /// Brand repository - lazy initialization
+    /// </summary>
     public IBrandRepository Brands
     {
         get
         {
-            _brands ??= new BrandRepository(Connection, Transaction);
+            _brands ??= new BrandRepository(_context);
             return _brands;
         }
     }
 
+    /// <summary>
+    /// Product repository - lazy initialization
+    /// </summary>
     public IProductRepository Products
     {
         get
         {
-            _products ??= new ProductRepository(Connection, Transaction);
+            _products ??= new ProductRepository(_context);
             return _products;
         }
     }
 
-    public void BeginTransaction()
+    /// <summary>
+    /// Save all changes to the database
+    /// </summary>
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        _transaction?.Dispose();
-        _transaction = Connection.BeginTransaction();
+        return await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task CommitAsync(CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Begin a new transaction
+    /// </summary>
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
+        _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Commit the current transaction
+    /// </summary>
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_transaction == null)
+        {
+            throw new InvalidOperationException("No active transaction to commit.");
+        }
+
         try
         {
-            _transaction?.Commit();
+            await _context.SaveChangesAsync(cancellationToken);
+            await _transaction.CommitAsync(cancellationToken);
         }
         catch
         {
-            _transaction?.Rollback();
+            await RollbackTransactionAsync(cancellationToken);
             throw;
         }
         finally
         {
-            _transaction?.Dispose();
+            await _transaction.DisposeAsync();
             _transaction = null;
         }
-
-        await Task.CompletedTask;
     }
 
-    public void Rollback()
+    /// <summary>
+    /// Rollback the current transaction
+    /// </summary>
+    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
     {
-        _transaction?.Rollback();
-        _transaction?.Dispose();
-        _transaction = null;
+        if (_transaction == null)
+        {
+            throw new InvalidOperationException("No active transaction to rollback.");
+        }
+
+        try
+        {
+            await _transaction.RollbackAsync(cancellationToken);
+        }
+        finally
+        {
+            await _transaction.DisposeAsync();
+            _transaction = null;
+        }
     }
 
+    /// <summary>
+    /// Dispose resources
+    /// </summary>
     public void Dispose()
     {
-        Dispose(true);
+        _transaction?.Dispose();
+        _context.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                _transaction?.Dispose();
-                _connection?.Dispose();
-            }
-            _disposed = true;
-        }
     }
 }

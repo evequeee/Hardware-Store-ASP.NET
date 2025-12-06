@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApplication.asp.net.c3.BLL.DTOs;
 using WebApplication.asp.net.c3.BLL.Interfaces;
+using WebApplication.asp.net.c3.BLL.Models;
 
 namespace WebApplication.asp.net.c3.Controllers;
 
@@ -16,6 +17,19 @@ public class ProductsController : ControllerBase
     {
         _productService = productService ?? throw new ArgumentNullException(nameof(productService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    /// <summary>
+    /// Get filtered, sorted and paginated products
+    /// </summary>
+    [HttpGet("filter")]
+    [ProducesResponseType(typeof(PagedResult<ProductDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<ProductDto>>> GetFiltered(
+        [FromQuery] ProductFilterParams filterParams,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _productService.GetFilteredProductsAsync(filterParams, cancellationToken);
+        return Ok(result);
     }
 
     /// <summary>

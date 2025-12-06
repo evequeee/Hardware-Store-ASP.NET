@@ -1,0 +1,88 @@
+2025-11-30 20:51:11.856 +02:00 [INF] Starting Hardware Store API
+2025-11-30 20:51:12.384 +02:00 [INF] Now listening on: http://localhost:5128
+2025-11-30 20:51:12.387 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-11-30 20:51:12.388 +02:00 [INF] Hosting environment: Development
+2025-11-30 20:51:12.388 +02:00 [INF] Content root path: G:\Programming\ASP.NET.C3\MyProject\WebApplication.asp.net.c3
+2025-11-30 20:53:23.543 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/?id=89b8f2f3-75f8-4541-a99a-e4f63b11813a&vscodeBrowserReqId=1764528803514 - null null
+2025-11-30 20:53:23.568 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/?id=89b8f2f3-75f8-4541-a99a-e4f63b11813a&vscodeBrowserReqId=1764528803514 - 301 0 null 25.5325ms
+2025-11-30 20:53:23.573 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/index.html - null null
+2025-11-30 20:53:23.607 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/index.html - 200 null text/html;charset=utf-8 34.0888ms
+2025-11-30 20:53:23.615 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/swagger-ui.css - null null
+2025-11-30 20:53:23.615 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/swagger-ui-bundle.js - null null
+2025-11-30 20:53:23.615 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/swagger-ui-standalone-preset.js - null null
+2025-11-30 20:53:23.628 +02:00 [INF] Sending file. Request path: '/swagger-ui-standalone-preset.js'. Physical path: 'N/A'
+2025-11-30 20:53:23.628 +02:00 [INF] Sending file. Request path: '/swagger-ui.css'. Physical path: 'N/A'
+2025-11-30 20:53:23.631 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/swagger-ui-standalone-preset.js - 200 230280 text/javascript 16.1127ms
+2025-11-30 20:53:23.631 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/swagger-ui.css - 200 152034 text/css 16.1841ms
+2025-11-30 20:53:23.636 +02:00 [INF] Sending file. Request path: '/swagger-ui-bundle.js'. Physical path: 'N/A'
+2025-11-30 20:53:23.637 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/swagger-ui-bundle.js - 200 1456926 text/javascript 22.3436ms
+2025-11-30 20:53:23.754 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/swagger/v1/swagger.json - null null
+2025-11-30 20:53:23.824 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 69.9183ms
+2025-11-30 21:23:23.491 +02:00 [INF] Application is shutting down...
+2025-11-30 21:32:34.728 +02:00 [INF] Starting Hardware Store API
+2025-11-30 21:32:34.896 +02:00 [FTL] Application terminated unexpectedly
+Microsoft.Extensions.Hosting.HostAbortedException: The host was aborted.
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.ThrowHostAborted()
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.OnNext(KeyValuePair`2 value)
+   at System.Diagnostics.DiagnosticListener.Write(String name, Object value)
+   at Microsoft.Extensions.Hosting.HostBuilder.ResolveHost(IServiceProvider serviceProvider, DiagnosticListener diagnosticListener)
+   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   at WebApplication.asp.net.c3.Program.Main(String[] args) in G:\Programming\ASP.NET.C3\MyProject\WebApplication.asp.net.c3\Program.cs:line 37
+2025-11-30 21:32:55.594 +02:00 [INF] Starting Hardware Store API
+2025-11-30 21:32:55.747 +02:00 [FTL] Application terminated unexpectedly
+Microsoft.Extensions.Hosting.HostAbortedException: The host was aborted.
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.ThrowHostAborted()
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.OnNext(KeyValuePair`2 value)
+   at System.Diagnostics.DiagnosticListener.Write(String name, Object value)
+   at Microsoft.Extensions.Hosting.HostBuilder.ResolveHost(IServiceProvider serviceProvider, DiagnosticListener diagnosticListener)
+   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   at WebApplication.asp.net.c3.Program.Main(String[] args) in G:\Programming\ASP.NET.C3\MyProject\WebApplication.asp.net.c3\Program.cs:line 37
+2025-11-30 21:34:33.501 +02:00 [INF] Starting Hardware Store API
+2025-11-30 21:34:33.626 +02:00 [FTL] Application terminated unexpectedly
+Microsoft.Extensions.Hosting.HostAbortedException: The host was aborted.
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.ThrowHostAborted()
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.OnNext(KeyValuePair`2 value)
+   at System.Diagnostics.DiagnosticListener.Write(String name, Object value)
+   at Microsoft.Extensions.Hosting.HostBuilder.ResolveHost(IServiceProvider serviceProvider, DiagnosticListener diagnosticListener)
+   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   at WebApplication.asp.net.c3.Program.Main(String[] args) in G:\Programming\ASP.NET.C3\MyProject\WebApplication.asp.net.c3\Program.cs:line 37
+2025-11-30 21:34:45.469 +02:00 [INF] Starting Hardware Store API
+2025-11-30 21:34:45.611 +02:00 [FTL] Application terminated unexpectedly
+Microsoft.Extensions.Hosting.HostAbortedException: The host was aborted.
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.ThrowHostAborted()
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.OnNext(KeyValuePair`2 value)
+   at System.Diagnostics.DiagnosticListener.Write(String name, Object value)
+   at Microsoft.Extensions.Hosting.HostBuilder.ResolveHost(IServiceProvider serviceProvider, DiagnosticListener diagnosticListener)
+   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   at WebApplication.asp.net.c3.Program.Main(String[] args) in G:\Programming\ASP.NET.C3\MyProject\WebApplication.asp.net.c3\Program.cs:line 37
+2025-11-30 21:34:54.814 +02:00 [INF] Starting Hardware Store API
+2025-11-30 21:34:54.923 +02:00 [FTL] Application terminated unexpectedly
+Microsoft.Extensions.Hosting.HostAbortedException: The host was aborted.
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.ThrowHostAborted()
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.OnNext(KeyValuePair`2 value)
+   at System.Diagnostics.DiagnosticListener.Write(String name, Object value)
+   at Microsoft.Extensions.Hosting.HostBuilder.ResolveHost(IServiceProvider serviceProvider, DiagnosticListener diagnosticListener)
+   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   at WebApplication.asp.net.c3.Program.Main(String[] args) in G:\Programming\ASP.NET.C3\MyProject\WebApplication.asp.net.c3\Program.cs:line 37
+2025-11-30 21:35:05.166 +02:00 [INF] Starting Hardware Store API
+2025-11-30 21:35:05.434 +02:00 [INF] Now listening on: http://localhost:5128
+2025-11-30 21:35:05.438 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-11-30 21:35:05.438 +02:00 [INF] Hosting environment: Development
+2025-11-30 21:35:05.439 +02:00 [INF] Content root path: G:\Programming\ASP.NET.C3\MyProject\WebApplication.asp.net.c3
+2025-11-30 21:35:26.669 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/?id=89b8f2f3-75f8-4541-a99a-e4f63b11813a&vscodeBrowserReqId=1764531326643 - null null
+2025-11-30 21:35:26.690 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/?id=89b8f2f3-75f8-4541-a99a-e4f63b11813a&vscodeBrowserReqId=1764531326643 - 301 0 null 22.183ms
+2025-11-30 21:35:26.695 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/index.html - null null
+2025-11-30 21:35:26.734 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/index.html - 200 null text/html;charset=utf-8 38.582ms
+2025-11-30 21:35:26.799 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5128/swagger/v1/swagger.json - null null
+2025-11-30 21:35:26.874 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5128/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 75.1311ms
+2025-11-30 21:39:42.765 +02:00 [INF] Application is shutting down...
+2025-11-30 21:42:28.843 +02:00 [INF] Starting Hardware Store API
+2025-11-30 21:42:29.154 +02:00 [INF] Now listening on: http://localhost:5128
+2025-11-30 21:42:29.157 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-11-30 21:42:29.158 +02:00 [INF] Hosting environment: Development
+2025-11-30 21:42:29.159 +02:00 [INF] Content root path: G:\Programming\ASP.NET.C3\MyProject\WebApplication.asp.net.c3

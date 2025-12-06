@@ -80,18 +80,18 @@ public class CategoryService : ICategoryService
 
         try
         {
-            _unitOfWork.BeginTransaction();
-            var id = await _unitOfWork.Categories.AddAsync(category, cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
+            var createdCategory = await _unitOfWork.Categories.AddAsync(category, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-            category.Id = id;
-            _logger.LogInformation("Category created successfully with Id: {CategoryId}", id);
+            _logger.LogInformation("Category created successfully with Id: {CategoryId}", createdCategory.Id);
 
-            return _mapper.Map<CategoryDto>(category);
+            return _mapper.Map<CategoryDto>(createdCategory);
         }
         catch (Exception ex)
         {
-            _unitOfWork.Rollback();
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             _logger.LogError(ex, "Error creating category: {CategoryName}", dto.Name);
             throw;
         }
@@ -132,9 +132,10 @@ public class CategoryService : ICategoryService
 
         try
         {
-            _unitOfWork.BeginTransaction();
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
             await _unitOfWork.Categories.UpdateAsync(category, cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
             _logger.LogInformation("Category updated successfully with Id: {CategoryId}", dto.Id);
 
@@ -142,7 +143,7 @@ public class CategoryService : ICategoryService
         }
         catch (Exception ex)
         {
-            _unitOfWork.Rollback();
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             _logger.LogError(ex, "Error updating category: {CategoryId}", dto.Id);
             throw;
         }
@@ -166,17 +167,22 @@ public class CategoryService : ICategoryService
 
         try
         {
-            _unitOfWork.BeginTransaction();
-            var result = await _unitOfWork.Categories.DeleteAsync(id, cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
+            var category = await _unitOfWork.Categories.GetByIdAsync(id, cancellationToken);
+            if (category != null)
+            {
+                await _unitOfWork.Categories.DeleteAsync(category, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
             _logger.LogInformation("Category deleted successfully with Id: {CategoryId}", id);
 
-            return result;
+            return category != null;
         }
         catch (Exception ex)
         {
-            _unitOfWork.Rollback();
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             _logger.LogError(ex, "Error deleting category: {CategoryId}", id);
             throw;
         }

@@ -4,7 +4,7 @@ namespace WebApplication.asp.net.c3.Models
 {
     public abstract class BaseEntity
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
         
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -19,8 +19,8 @@ namespace WebApplication.asp.net.c3.Models
         
         public bool IsDeleted { get; set; } = false;
         
-        // Для оптимістичної конкурентності (PostgreSQL використовує xmin за замовчуванням)
-        // Можна закоментувати, якщо не потрібно
+        // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (PostgreSQL пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ xmin пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         [Timestamp]
         public byte[]? RowVersion { get; set; }
     }

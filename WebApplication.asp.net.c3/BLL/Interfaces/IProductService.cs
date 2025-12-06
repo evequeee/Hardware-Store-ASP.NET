@@ -1,4 +1,5 @@
 using WebApplication.asp.net.c3.BLL.DTOs;
+using WebApplication.asp.net.c3.BLL.Models;
 
 namespace WebApplication.asp.net.c3.BLL.Interfaces;
 
@@ -15,4 +16,7 @@ public interface IProductService
     Task<ProductDto> UpdateProductAsync(UpdateProductDto dto, CancellationToken cancellationToken = default);
     Task<bool> DeleteProductAsync(int id, CancellationToken cancellationToken = default);
     Task<bool> UpdateStockAsync(UpdateStockDto dto, CancellationToken cancellationToken = default);
+    
+    // Pagination and Filtering
+    Task<PagedResult<ProductDto>> GetFilteredProductsAsync(ProductFilterParams filterParams, CancellationToken cancellationToken = default);
 }
