@@ -1,0 +1,6 @@
+@HardwareStore.ApiGateway_HostAddress = http://localhost:5160
+
+GET {{HardwareStore.ApiGateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,6 @@
+@HardwareStore.AggregatorService_HostAddress = http://localhost:5288
+
+GET {{HardwareStore.AggregatorService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
