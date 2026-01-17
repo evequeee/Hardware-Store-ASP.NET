@@ -80,8 +80,19 @@ public static class Extensions
             .WithTracing(tracing =>
             {
                 tracing.AddAspNetCoreInstrumentation()
-                    // Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
-                    //.AddGrpcClientInstrumentation()
+                    // Enable gRPC client instrumentation for distributed tracing
+                    .AddGrpcClientInstrumentation(options =>
+                    {
+                        options.SuppressDownstreamInstrumentation = false;
+                        options.EnrichWithHttpRequestMessage = (activity, request) =>
+                        {
+                            activity?.SetTag("grpc.request.uri", request.RequestUri?.ToString());
+                        };
+                        options.EnrichWithHttpResponseMessage = (activity, response) =>
+                        {
+                            activity?.SetTag("grpc.response.status_code", (int)response.StatusCode);
+                        };
+                    })
                     .AddHttpClientInstrumentation()
                     .AddSqlClientInstrumentation();
             });
