@@ -1,188 +1,177 @@
-using Grpc.Core;
-using HardwareStore.AggregatorService.Caching;
 using HardwareStore.AggregatorService.DTOs;
-using HardwareStore.AggregatorService.Protos;
+using HardwareStore.AggregatorService.HealthChecks;
 using HardwareStore.AggregatorService.Services;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
+using OpenTelemetry.Metrics;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add ServiceDefaults
+// 1. First register health checks (BEFORE AddServiceDefaults)
+builder.Services.AddHealthChecks()
+    // Liveness check - basic app responsiveness
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
+    // Downstream WebAPI service health check
+    .AddCheck<WebApiHealthCheck>(
+        name: "webapi-downstream",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: new[] { "downstream", "http", "ready" });
+
+// 2. Add ServiceDefaults
 builder.AddServiceDefaults();
 
-// Add Redis distributed caching
-builder.AddRedisDistributedCache("redis");
+// 3. Add RabbitMQ Client
+builder.AddRabbitMQClient("rabbitmq");
 
-// Register gRPC Client with Service Discovery
-builder.Services.AddGrpcClient<ProductGrpcService.ProductGrpcServiceClient>(options =>
-{
-    options.Address = new Uri("http://webapi");
-})
-.AddServiceDiscovery();
+// 4. Add HttpClientFactory for health checks
+builder.Services.AddHttpClient("WebApiHealthCheck");
 
-// Register ProductGrpcClient wrapper
-builder.Services.AddScoped<ProductGrpcClient>();
-
-// Register Legacy HTTP Client (fallback)
+// 5. Register Typed HttpClient with Service Discovery and Custom Resilience
 builder.Services.AddHttpClient<ProductsClient>(client =>
 {
     client.BaseAddress = new Uri("http://webapi");
 })
-.AddServiceDiscovery();
+.AddServiceDiscovery()
+.AddCustomResilienceHandler("ProductsClient", isCritical: true);
 
-// Register Aggregator Cache Service
-builder.Services.AddSingleton<IAggregatorCacheService, AggregatorCacheService>();
+// 6. Add custom aggregator metrics
+var aggregatorMeter = new Meter("HardwareStore.Aggregator", "1.0.0");
+
+var aggregatorRequestsCounter = aggregatorMeter.CreateCounter<long>(
+    "aggregator.requests.total",
+    unit: "{requests}",
+    description: "Total aggregator requests");
+
+var aggregatorLatencyHistogram = aggregatorMeter.CreateHistogram<double>(
+    "aggregator.request.duration",
+    unit: "ms",
+    description: "Aggregator request duration in milliseconds");
+
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddMeter("HardwareStore.Aggregator");
+    });
 
 var app = builder.Build();
 
 // Map ServiceDefaults endpoints
 app.MapDefaultEndpoints();
 
-// Aggregator endpoint - combines data from multiple microservices via gRPC
-app.MapGet("/api/aggregator/dashboard", async (
-    ProductGrpcClient grpcClient,
-    IAggregatorCacheService cacheService,
-    ILogger<Program> logger,
-    CancellationToken ct) =>
+// Aggregator endpoint - combines data from multiple microservices
+app.MapGet("/api/aggregator/dashboard", async (ProductsClient productsClient, CancellationToken ct) =>
 {
-    logger.LogInformation("Aggregator dashboard requested");
+    var stopwatch = Stopwatch.StartNew();
+    
+    try
+    {
+        aggregatorRequestsCounter.Add(1, 
+            new KeyValuePair<string, object?>("endpoint", "dashboard"),
+            new KeyValuePair<string, object?>("status", "started"));
+        
+        // Record request start in Extensions metrics
+        Extensions.ApiRequestsCounter.Add(1, 
+            new KeyValuePair<string, object?>("service", "aggregator"),
+            new KeyValuePair<string, object?>("endpoint", "dashboard"));
 
-    var aggregatedData = await cacheService.GetOrCreateAsync(
-        AggregatorCacheKeys.Dashboard,
-        async () =>
+        var products = await productsClient.GetAllProductsAsync(ct);
+
+        var aggregatedData = new AggregatedDataDto
         {
-            try
-            {
-                // Use gRPC to fetch products
-                var products = await grpcClient.GetAllProductsAsync(ct);
+            Products = products,
+            TotalProducts = products.Count,
+            TotalInventoryValue = products.Sum(p => p.Price * p.StockQuantity),
+            ProductsByCategory = products
+                .GroupBy(p => p.Category)
+                .ToDictionary(g => g.Key, g => g.Count()),
+            RetrievedAt = DateTime.UtcNow
+        };
 
-                return new AggregatedDataDto
-                {
-                    Products = products,
-                    TotalProducts = products.Count,
-                    TotalInventoryValue = products.Sum(p => p.Price * p.StockQuantity),
-                    ProductsByCategory = products
-                        .GroupBy(p => p.Category)
-                        .ToDictionary(g => g.Key, g => g.Count()),
-                    RetrievedAt = DateTime.UtcNow
-                };
-            }
-            catch (RpcException ex)
-            {
-                logger.LogError(ex, "gRPC error fetching products for dashboard. Status: {StatusCode}", ex.StatusCode);
-                throw;
-            }
-        },
-        TimeSpan.FromSeconds(30));
+        stopwatch.Stop();
+        aggregatorLatencyHistogram.Record(stopwatch.ElapsedMilliseconds,
+            new KeyValuePair<string, object?>("endpoint", "dashboard"),
+            new KeyValuePair<string, object?>("status", "success"));
+        
+        Extensions.RequestDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
+            new KeyValuePair<string, object?>("service", "aggregator"),
+            new KeyValuePair<string, object?>("endpoint", "dashboard"),
+            new KeyValuePair<string, object?>("status", "success"));
 
-    return Results.Ok(aggregatedData);
+        return Results.Ok(aggregatedData);
+    }
+    catch (Exception)
+    {
+        stopwatch.Stop();
+        aggregatorLatencyHistogram.Record(stopwatch.ElapsedMilliseconds,
+            new KeyValuePair<string, object?>("endpoint", "dashboard"),
+            new KeyValuePair<string, object?>("status", "failure"));
+        
+        Extensions.RequestDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
+            new KeyValuePair<string, object?>("service", "aggregator"),
+            new KeyValuePair<string, object?>("endpoint", "dashboard"),
+            new KeyValuePair<string, object?>("status", "failure"));
+        
+        throw;
+    }
 })
 .WithName("GetAggregatedDashboard")
 .WithOpenApi();
 
-// Aggregator endpoint for specific product with enriched data via gRPC
-app.MapGet("/api/aggregator/product/{id}", async (
-    string id,
-    ProductGrpcClient grpcClient,
-    IAggregatorCacheService cacheService,
-    ILogger<Program> logger,
-    CancellationToken ct) =>
+// Aggregator endpoint for specific product with enriched data
+app.MapGet("/api/aggregator/product/{id}", async (string id, ProductsClient productsClient, CancellationToken ct) =>
 {
-    logger.LogInformation("Aggregator enriched product requested: {ProductId}", id);
-
-    var cacheKey = AggregatorCacheKeys.GetEnrichedProductKey(id);
-
-    var enrichedProduct = await cacheService.GetOrCreateAsync(
-        cacheKey,
-        async () =>
-        {
-            try
-            {
-                var product = await grpcClient.GetProductByIdAsync(id, ct);
-
-                if (product == null)
-                {
-                    return null;
-                }
-
-                return new EnrichedProductDto
-                {
-                    Product = product,
-                    IsLowStock = product.StockQuantity < 10,
-                    StockValue = product.Price * product.StockQuantity,
-                    RetrievedAt = DateTime.UtcNow
-                };
-            }
-            catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
-            {
-                logger.LogWarning("Product {ProductId} not found via gRPC", id);
-                return null;
-            }
-        },
-        TimeSpan.FromSeconds(30));
-
-    if (enrichedProduct == null)
+    var stopwatch = Stopwatch.StartNew();
+    
+    try
     {
-        return Results.NotFound(new { Message = $"Product with ID {id} not found" });
-    }
+        aggregatorRequestsCounter.Add(1,
+            new KeyValuePair<string, object?>("endpoint", "product"),
+            new KeyValuePair<string, object?>("status", "started"));
+        
+        Extensions.ProductsViewedCounter.Add(1,
+            new KeyValuePair<string, object?>("source", "aggregator"));
 
-    return Results.Ok(enrichedProduct);
+        var product = await productsClient.GetProductByIdAsync(id, ct);
+    
+        if (product == null)
+        {
+            stopwatch.Stop();
+            aggregatorLatencyHistogram.Record(stopwatch.ElapsedMilliseconds,
+                new KeyValuePair<string, object?>("endpoint", "product"),
+                new KeyValuePair<string, object?>("status", "not_found"));
+            
+            return Results.NotFound(new { Message = $"Product with ID {id} not found" });
+        }
+
+        // Enrich product data with additional computed fields
+        var enrichedProduct = new
+        {
+            Product = product,
+            IsLowStock = product.StockQuantity < 10,
+            StockValue = product.Price * product.StockQuantity,
+            RetrievedAt = DateTime.UtcNow
+        };
+
+        stopwatch.Stop();
+        aggregatorLatencyHistogram.Record(stopwatch.ElapsedMilliseconds,
+            new KeyValuePair<string, object?>("endpoint", "product"),
+            new KeyValuePair<string, object?>("status", "success"));
+
+        return Results.Ok(enrichedProduct);
+    }
+    catch (Exception)
+    {
+        stopwatch.Stop();
+        aggregatorLatencyHistogram.Record(stopwatch.ElapsedMilliseconds,
+            new KeyValuePair<string, object?>("endpoint", "product"),
+            new KeyValuePair<string, object?>("status", "failure"));
+        throw;
+    }
 })
 .WithName("GetEnrichedProduct")
 .WithOpenApi();
-
-// Aggregator endpoint for parallel gRPC calls
-app.MapGet("/api/aggregator/summary", async (
-    ProductGrpcClient grpcClient,
-    IAggregatorCacheService cacheService,
-    ILogger<Program> logger,
-    CancellationToken ct) =>
-{
-    logger.LogInformation("Aggregator summary requested - parallel gRPC calls");
-
-    const string cacheKey = "aggregator:summary";
-
-    var summary = await cacheService.GetOrCreateAsync(
-        cacheKey,
-        async () =>
-        {
-            // Parallel gRPC calls using Task.WhenAll
-            var productsTask = grpcClient.GetAllProductsAsync(ct);
-            
-            // Add more parallel calls here if there are other services
-            // var customersTask = customersClient.GetAllCustomersAsync(ct);
-            // var ordersTask = ordersClient.GetAllOrdersAsync(ct);
-
-            await Task.WhenAll(productsTask);
-
-            var products = await productsTask;
-
-            return new
-            {
-                Products = new
-                {
-                    Total = products.Count,
-                    InStock = products.Count(p => p.StockQuantity > 0),
-                    LowStock = products.Count(p => p.StockQuantity > 0 && p.StockQuantity < 10),
-                    OutOfStock = products.Count(p => p.StockQuantity == 0),
-                    TotalValue = products.Sum(p => p.Price * p.StockQuantity),
-                    Categories = products.Select(p => p.Category).Distinct().Count()
-                },
-                RetrievedAt = DateTime.UtcNow
-            };
-        },
-        TimeSpan.FromSeconds(30));
-
-    return Results.Ok(summary);
-})
-.WithName("GetAggregatedSummary")
-.WithOpenApi();
-
-// Cache statistics endpoint
-app.MapGet("/api/aggregator/cache/stats", (IAggregatorCacheService cacheService) =>
-{
-    var stats = cacheService.GetStatistics();
-    return Results.Ok(stats);
-}).WithName("GetAggregatorCacheStats").WithOpenApi();
 
 app.Run();
 
